@@ -28,7 +28,6 @@ behavioral = behavioral.join(first_cols[['Sex', 'Age', 'Study.Site', 'DX_01_Cat'
 # remove observations with no label for DX_01_Cat
 behavioral = behavioral.dropna(subset=['DX_01_Cat'])
 
-# separate train and test set
 # shuffle the rows
 behavioral = behavioral.sample(frac=1)
 
