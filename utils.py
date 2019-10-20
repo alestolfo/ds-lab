@@ -12,11 +12,11 @@ def visualize(disease = None, category = None):
     :disease: must be the name of a disease in the selected category
     :category: must be one of the values "DX_01_Cat", "DX_01_Sub", "DX_01"
     '''
-    behavioral = pd.read_csv('data/Behavioral/AllData.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
     mri = pd.read_csv('data/MRI/structuralMRI/GlobalCorticalThickness.csv')
     if disease == None:
-        age = behavioral[['Age', 'Patient_ID']]
-        age = age.rename(columns={'Patient_ID': 'ID'})
+        age = behavioral[['Age', 'EID']]
+        age = age.rename(columns={'EID': 'ID'})
         mri = mri[['ID', 'GlobalCorticalThickness']]
         # join over common patient_id
         dataset = pd.merge(mri, age, on='ID', how='inner')
@@ -24,8 +24,8 @@ def visualize(disease = None, category = None):
         # visualize
         sns.regplot(x = 'GlobalCorticalThickness', y = 'Age', data = dataset).set_title('All Patients')
     else:
-        age = behavioral[['Age', 'Patient_ID', category]]
-        age = age.rename(columns={'Patient_ID': 'ID'})
+        age = behavioral[['Age', 'EID', category]]
+        age = age.rename(columns={'EID': 'ID'})
         mri = mri[['ID', 'GlobalCorticalThickness']]
         # join over common patient_id
         dataset = pd.merge(mri, age, on='ID', how='inner')
@@ -46,18 +46,18 @@ def create_dataset_age(select_disease = None, select_category = None):
     present in the dataset. Otherwise, only patients with the given disease
     will be present in the dataset
     '''
-    behavioral = pd.read_csv('data/Behavioral/AllData.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
     mri = pd.read_csv('data/MRI/structuralMRI/GlobalCorticalThickness.csv')
     if select_disease == None:         
-        age = behavioral[['Patient_ID', 'Age', 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
-        age = age.rename(columns={'Patient_ID': 'ID'})
+        age = behavioral[['EID', 'Age', 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
+        age = age.rename(columns={'EID': 'ID'})
         mri = mri[['ID', 'GlobalCorticalThickness']]
         # join over common patient_id
         dataset = pd.merge(mri, age, on='ID', how='inner')
         return dataset
     else:
-        age = behavioral[['Patient_ID', 'Age', select_category]]
-        age = age.rename(columns={'Patient_ID': 'ID'})
+        age = behavioral[['EID', 'Age', select_category]]
+        age = age.rename(columns={'EID': 'ID'})
         mri = mri[['ID', 'GlobalCorticalThickness']]
         # join over common patient_id
         dataset = pd.merge(mri, age, on='ID', how='inner')
@@ -78,7 +78,7 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
     present in the dataset. Otherwise, only patients with the given disease
     will be present in the dataset
     '''
-    behavioral = pd.read_csv('data/Behavioral/AllData.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
     
     dti = pd.read_csv('data/MRI/DTI/FAPerTract.csv')
     
@@ -95,8 +95,8 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
     MRI = merged.drop(['ScanSite'], axis = 1)
 
     if select_disease == None:
-        score = behavioral[['Patient_ID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
-        score = score.rename(columns={'Patient_ID': 'ID'})
+        score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
+        score = score.rename(columns={'EID': 'ID'})
         # join over common patient_id
         dataset = pd.merge(score, MRI, on='ID', how='inner')
         if DTI == False:
@@ -106,8 +106,8 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
             dataset = dataset.drop('ScanSite', axis = 1)
             return dataset
     else:
-        score = behavioral[['Patient_ID', SCORE, select_category]]
-        score = score.rename(columns={'Patient_ID': 'ID'})
+        score = behavioral[['EID', SCORE, select_category]]
+        score = score.rename(columns={'EID': 'ID'})
         # join over common patient_id
         dataset = pd.merge(score, MRI, on='ID', how='inner')
         dataset = dataset.loc[dataset[select_category] == select_disease]
