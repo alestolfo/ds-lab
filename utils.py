@@ -12,7 +12,7 @@ def visualize(disease = None, category = None):
     :disease: must be the name of a disease in the selected category
     :category: must be one of the values "DX_01_Cat", "DX_01_Sub", "DX_01"
     '''
-    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned/HBNFinalSummaries.csv')
     mri = pd.read_csv('data/MRI/structuralMRI/GlobalCorticalThickness.csv')
     if disease == None:
         age = behavioral[['Age', 'EID']]
@@ -46,7 +46,7 @@ def create_dataset_age(select_disease = None, select_category = None):
     present in the dataset. Otherwise, only patients with the given disease
     will be present in the dataset
     '''
-    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned/HBNFinalSummaries.csv')
     mri = pd.read_csv('data/MRI/structuralMRI/GlobalCorticalThickness.csv')
     if select_disease == None:         
         age = behavioral[['EID', 'Age', 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
@@ -78,7 +78,7 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
     present in the dataset. Otherwise, only patients with the given disease
     will be present in the dataset
     '''
-    behavioral = pd.read_csv('data/Behavioral/cleaned-updated/HBNFinalSummaries.csv')
+    behavioral = pd.read_csv('data/Behavioral/cleaned/HBNFinalSummaries.csv')
     
     dti = pd.read_csv('data/MRI/DTI/FAPerTract.csv')
     
