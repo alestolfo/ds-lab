@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from functools import reduce
 import seaborn as sns
+from sklearn.model_selection import KFold
 
 def visualize(disease = None, category = None):
     '''
@@ -36,8 +37,6 @@ def visualize(disease = None, category = None):
         sns.regplot(x = 'GlobalCorticalThickness', y = 'Age', data = dataset).set_title('Patients with %s' %disease)
   
  
-
-
 
 def create_dataset_age(select_disease = None, select_category = None):
     '''
@@ -118,6 +117,31 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
             dataset = pd.merge(dataset, dti, on = 'ID', how = 'inner')
             dataset = dataset.drop('ScanSite', axis = 1)
             return dataset
+        
+        
+# Helper function for cross-validation
+def cv(model, data, labels, n_splits = 5):
+    '''
+    model: must be a sklearn object with .fit and .predict methods
+    data: the X matrix containing the features, can be a pd.DataFrame or a np object (array or matrix)
+    labels: y, can be a pd.DataFrame or a np array
+    n_splits: number of desired folds
+    => returns array of mean suqared error calculated on each fold
+    '''
+    kf = KFold(n_splits=n_splits)
+    data = np.array(data)
+    labels = np.array(labels)
+    mses = []
+    i = 1
+    for train, test in kf.split(data):
+        print("Split: {}".format(i), end="\r")
+        X_train, X_test, y_train, y_test = data[train], data[test], labels[train], labels[test]
+        model.fit(X=X_train, y=y_train)
+        pred = model.predict(X_test)
+        mse = sum((pred - y_test)**2)/len(test)
+        mses.append(mse)
+        i = i+1
+    return mses
     
     
 # example usages
