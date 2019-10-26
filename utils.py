@@ -69,7 +69,7 @@ def create_dataset_age(select_disease = None, select_category = None):
 # {'BrainSegVolNotVent', 'ID', 'ScanSite', 'eTIV'}. We take this into consideration
 # when building the following function
         
-def create_dataset(select_disease = None, select_category = None, SCORE = 'Age', DTI = False):    
+def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'Age', DTI = False):    
     '''
     ALL the MRI high-level features are used
     from the behavioral data we select SCORE as a response (could be age, WISC, SWAN...)
@@ -117,8 +117,65 @@ def create_dataset(select_disease = None, select_category = None, SCORE = 'Age',
             dataset = pd.merge(dataset, dti, on = 'ID', how = 'inner')
             dataset = dataset.drop('ScanSite', axis = 1)
             return dataset
+
         
         
+def create_dataset_eeg(disease = None, category = None, SCORE = 'Age', clusters = False, channels = False):    
+    '''
+    EEG data. Average eeg data is always loaded. Clusters and channels control if want to include
+    these eeg features also.
+    From the behavioral data we select SCORE as a response (could be age, WISC, SWAN...)
+    If select_disease = None the columns DX_01_Cat, DX_01_Sub, DX_01 will also be
+    present in the dataset. Otherwise, only patients with the given disease
+    will be present in the dataset
+    '''
+    behavioral = pd.read_csv('data/Behavioral/cleaned/HBNFinalSummaries.csv')
+    eeg_average = pd.read_csv("data/EEG/resting_eeg_average.csv")         # 62 features
+    eeg_clusters = pd.read_csv("data/EEG/resting_eeg_clusters.csv")       # 302 features    
+    eeg_channels = pd.read_csv("data/EEG/resting_eeg_channels.csv")       # 5054 features
+
+    common_columns = ['eyesclosed_alphapeak_derivative_amplitude',
+        'eyesclosed_alphapeak_derivative_freq',
+        'eyesclosed_alphapeak_gravity_amplitude',
+        'eyesclosed_alphapeak_gravity_freq',
+        'eyesclosed_alphapeak_max_amplitude',
+        'eyesclosed_alphapeak_max_freq',
+        'eyesopen_alphapeak_derivative_amplitude',
+        'eyesopen_alphapeak_derivative_freq',
+        'eyesopen_alphapeak_gravity_amplitude',
+        'eyesopen_alphapeak_gravity_freq',
+        'eyesopen_alphapeak_max_amplitude',
+        'eyesopen_alphapeak_max_freq',
+        'id',
+        'quality_rating']
+    
+    if clusters == False and channels == False:
+        EEG = eeg_average
+    elif clusters == True and channels == False:
+        dfs = [eeg_average, eeg_clusters]
+        EEG = reduce(lambda left,right: pd.merge(left,right,on=common_columns), dfs)
+    elif clusters == True and channels == True:
+        dfs = [eeg_average, eeg_clusters, eeg_channels]
+        EEG = reduce(lambda left,right: pd.merge(left,right,on=common_columns), dfs)
+    else:
+        raise ValueError('If you load channels you should also load clusters')
+    if disease == None:
+        score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
+        score = score.rename(columns={'EID': 'id'})
+        # join over common patient_id
+        dataset = pd.merge(score, EEG, on='id', how='inner')
+        return dataset
+    else:
+        score = behavioral[['EID', SCORE, category]]
+        score = score.rename(columns={'EID': 'id'})
+        # join over common patient_id
+        dataset = pd.merge(score, EEG, on='id', how='inner')
+        dataset = dataset.loc[dataset[category] == disease]
+        dataset = dataset.drop([category], axis = 1)
+        return dataset
+    
+    
+    
 # Helper function for cross-validation
 def cv(model, data, labels, n_splits = 5):
     '''
