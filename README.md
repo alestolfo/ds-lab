@@ -10,4 +10,4 @@
 
 - [Paper 2](https://arxiv.org/pdf/1907.08982.pdf)
 
-- [CDE code](https://github.com/freelunchtheorem/Conditional_Density_Estimation/blob/master/cde/density_estimator/MDN.py)
+- [CDE code](1https://github.com/freelunchtheorem/Conditional Density Estimation)
