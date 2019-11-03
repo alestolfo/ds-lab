@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import reduce
+from sklearn.metrics import r2_score
 import seaborn as sns
 from sklearn.model_selection import KFold
 
@@ -69,9 +70,8 @@ def create_dataset_age(select_disease = None, select_category = None):
 # {'BrainSegVolNotVent', 'ID', 'ScanSite', 'eTIV'}. We take this into consideration
 # when building the following function
         
-def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'Age', DTI = False):    
+def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'Age', thickness= True, volume=True, subcortical=True, DTI = False):    
     '''
-    ALL the MRI high-level features are used
     from the behavioral data we select SCORE as a response (could be age, WISC, SWAN...)
     if select_disease = None the columns DX_01_Cat, DX_01_Sub, DX_01 will also be
     present in the dataset. Otherwise, only patients with the given disease
@@ -88,7 +88,20 @@ def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'A
     mri_vol_right = pd.read_csv('data/MRI/structuralMRI/CorticalVolumeRHROI.csv')
     mri_sub_left = pd.read_csv('data/MRI/structuralMRI/SubCorticalVolumeLHROI.csv')
     mri_sub_right = pd.read_csv('data/MRI/structuralMRI/SubCorticalVolumeRHROI.csv')
-    dfs = [mri_left, mri_right, mri_vol_left, mri_vol_right, mri_sub_left, mri_sub_right]
+    if thickness == True and volume == True and subcortical == True:
+        dfs = [mri_left, mri_right, mri_vol_left, mri_vol_right, mri_sub_left, mri_sub_right]
+    elif thickness == True and volume == True and subcortical == False:
+        dfs = [mri_left, mri_right, mri_vol_left, mri_vol_right]
+    elif thickness == True and volume == False and subcortical == False:
+        dfs = [mri_left, mri_right]
+    elif thickness == False and volume == True and subcortical == False:
+        dfs = [mri_vol_left, mri_vol_right]
+    elif thickness == False and volume == False and subcortical == True:
+        dfs = [mri_sub_left, mri_sub_right]
+    elif thickness == False and volume == True and subcortical == True:
+        dfs = [mri_vol_left, mri_vol_right, mri_sub_left, mri_sub_right]
+    else:
+        raise ValueError('This combination of features is not allowed.')
     merged = reduce(lambda left,right: pd.merge(left,right,on=['ID', 'ScanSite', 'eTIV', 'BrainSegVolNotVent']), dfs)
     merged = pd.merge(merged, mri_global, on=['ID', 'ScanSite'])
     MRI = merged.drop(['ScanSite'], axis = 1)
@@ -118,9 +131,58 @@ def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'A
             dataset = dataset.drop('ScanSite', axis = 1)
             return dataset
 
+
+def create_dataset_eeg(disease = None, category = None, SCORE = 'Age',
+                       clusters = False, spectro=True, micro = False, PSD=False, ratios = False):    
+    '''
+    From the behavioral data we select SCORE as a response (could be age, WISC, SWAN...)
+    If select_disease = None the columns DX_01_Cat, DX_01_Sub, DX_01 will also be
+    present in the dataset. Otherwise, only patients with the given disease
+    will be present in the dataset
+    '''
+    behavioral = pd.read_csv('data/Behavioral/cleaned/HBNFinalSummaries.csv')
+    spectro_average = pd.read_csv('data/EEG/RestingEEG_Spectro_Average.csv')       
+    spectro_clusters = pd.read_csv('data/EEG/RestingEEG_Spectro_Cluster.csv')
+    microstates = pd.read_csv('data/EEG/RestingEEG_Microstates.csv')
+    PSD_average = pd.read_csv('data/EEG/RestingEEG_PSD_Average.csv')
+    PSD_clusters = pd.read_csv('data/EEG/RestingEEG_PSD_Cluster.csv')
+    ratio = pd.read_csv('data/EEG/RestingEEG_Spectro_Ratios.csv')
+    
+    if clusters == False:
+        if PSD == False:
+            EEG = spectro_average
+        else:
+            EEG = reduce(lambda left,right: pd.merge(left,right,on='id'), [spectro_average, PSD_average])
+    elif clusters == True:
+        if PSD == False:
+            EEG = spectro_clusters
+        else:
+            EEG = reduce(lambda left,right: pd.merge(left,right,on='id'), [spectro_clusters, PSD_clusters])
+    if micro == True:
+        EEG = reduce(lambda left,right: pd.merge(left,right,on='id'), [EEG, microstates])
+    if ratios == True:
+        EEG = reduce(lambda left,right: pd.merge(left,right,on='id'), [EEG, ratio])
+
+    if disease == None:
+        score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
+        score = score.rename(columns={'EID': 'id'})
+        # join over common patient_id
+        dataset = pd.merge(score, EEG, on='id', how='inner')
+        return dataset
+    else:
+        score = behavioral[['EID', SCORE, category]]
+        score = score.rename(columns={'EID': 'id'})
+        # join over common patient_id
+        dataset = pd.merge(score, EEG, on='id', how='inner')
+        dataset = dataset.loc[dataset[category] == disease]
+        dataset = dataset.drop([category], axis = 1)
+        return dataset
+    
+            
         
         
-def create_dataset_eeg(disease = None, category = None, SCORE = 'Age', clusters = False, channels = False):    
+        
+def create_dataset_eeg_old(disease = None, category = None, SCORE = 'Age', clusters = False, channels = False):    
     '''
     EEG data. Average eeg data is always loaded. Clusters and channels control if want to include
     these eeg features also.
@@ -177,7 +239,7 @@ def create_dataset_eeg(disease = None, category = None, SCORE = 'Age', clusters 
     
     
 # Helper function for cross-validation
-def cv(model, data, labels, n_splits = 5):
+def cv(model, data, labels, n_splits = 5, want_r2 =False):
     '''
     model: must be a sklearn object with .fit and .predict methods
     data: the X matrix containing the features, can be a pd.DataFrame or a np object (array or matrix)
@@ -185,10 +247,11 @@ def cv(model, data, labels, n_splits = 5):
     n_splits: number of desired folds
     => returns array of mean suqared error calculated on each fold
     '''
-    kf = KFold(n_splits=n_splits)
+    kf = KFold(n_splits=n_splits, shuffle=True)
     data = np.array(data)
     labels = np.array(labels)
     mses = []
+    r2s = []
     i = 1
     for train, test in kf.split(data):
         print("Split: {}".format(i), end="\r")
@@ -197,8 +260,13 @@ def cv(model, data, labels, n_splits = 5):
         pred = model.predict(X_test)
         mse = sum((pred - y_test)**2)/len(test)
         mses.append(mse)
+        r2 = r2_score(y_pred=pred, y_true=y_test)
+        r2s.append(r2)
         i = i+1
-    return mses
+    if want_r2:
+        return (mses, r2s)
+    else:
+        return mses
     
     
 # example usages
@@ -209,6 +277,6 @@ if __name__ == '__main__':
     # dataset with age, major disorder labels (DX_01_Cat, DX_01_Sub, DX_01) and ONLY global mri score
     data1 = create_dataset_age()
     # dataset with age, ALL MRI high-level features and major disorder labels (DX_01_Cat, DX_01_Sub, DX_01) for ALL patients
-    data2 = create_dataset(SCORE = 'Age')
+    data2 = create_dataset_mri(SCORE = 'Age', thickness = True, volume = False, subcortical = False)
     # dataset with age and ALL MRI high-level features ONLY for patients with Attention-Deficit/Hyperactivity Disorder
-    data2 = create_dataset(select_disease = 'Attention-Deficit/Hyperactivity Disorder', select_category = 'DX_01_Sub', SCORE = 'Age')
+    data3 = create_dataset_mri(select_disease = 'Attention-Deficit/Hyperactivity Disorder', select_category = 'DX_01_Sub', SCORE = 'Age')
