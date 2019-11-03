@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import reduce
+from sklearn.metrics import r2_score
 import seaborn as sns
 from sklearn.model_selection import KFold
 
@@ -238,7 +239,7 @@ def create_dataset_eeg_old(disease = None, category = None, SCORE = 'Age', clust
     
     
 # Helper function for cross-validation
-def cv(model, data, labels, n_splits = 5):
+def cv(model, data, labels, n_splits = 5, want_r2 =False):
     '''
     model: must be a sklearn object with .fit and .predict methods
     data: the X matrix containing the features, can be a pd.DataFrame or a np object (array or matrix)
@@ -246,10 +247,11 @@ def cv(model, data, labels, n_splits = 5):
     n_splits: number of desired folds
     => returns array of mean suqared error calculated on each fold
     '''
-    kf = KFold(n_splits=n_splits)
+    kf = KFold(n_splits=n_splits, shuffle=True)
     data = np.array(data)
     labels = np.array(labels)
     mses = []
+    r2s = []
     i = 1
     for train, test in kf.split(data):
         print("Split: {}".format(i), end="\r")
@@ -258,8 +260,13 @@ def cv(model, data, labels, n_splits = 5):
         pred = model.predict(X_test)
         mse = sum((pred - y_test)**2)/len(test)
         mses.append(mse)
+        r2 = r2_score(y_pred=pred, y_true=y_test)
+        r2s.append(r2)
         i = i+1
-    return mses
+    if want_r2:
+        return (mses, r2s)
+    else:
+        return mses
     
     
 # example usages
