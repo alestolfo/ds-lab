@@ -71,7 +71,7 @@ def create_dataset_age(select_disease = None, select_category = None):
 # {'BrainSegVolNotVent', 'ID', 'ScanSite', 'eTIV'}. We take this into consideration
 # when building the following function
         
-def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'Age', thickness= True, volume=True, subcortical=True, DTI = False):    
+def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'Age', thickness= True, volume=True, subcortical=True, DTI = False, age_less_than=None):    
     '''
     from the behavioral data we select SCORE as a response (could be age, WISC, SWAN...)
     if select_disease = None the columns DX_01_Cat, DX_01_Sub, DX_01 will also be
@@ -109,6 +109,9 @@ def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'A
 
     if select_disease == None:
         score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01']]
+        if age_less_than != None and SCORE != 'Age':
+            score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01', 'Age']]
+            score = score[score['Age'] < age_less_than]
         score = score.rename(columns={'EID': 'ID'})
         # join over common patient_id
         dataset = pd.merge(score, MRI, on='ID', how='inner')
@@ -120,6 +123,9 @@ def create_dataset_mri(select_disease = None, select_category = None, SCORE = 'A
             return dataset
     else:
         score = behavioral[['EID', SCORE, select_category]]
+        if age_less_than != None and SCORE != 'Age':
+            score = behavioral[['EID', SCORE, 'DX_01_Cat', 'DX_01_Sub', 'DX_01', 'Age']]
+            score = score[score['Age'] < age_less_than]
         score = score.rename(columns={'EID': 'ID'})
         # join over common patient_id
         dataset = pd.merge(score, MRI, on='ID', how='inner')
