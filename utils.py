@@ -243,7 +243,7 @@ def create_dataset_eeg_old(disease = None, category = None, SCORE = 'Age', clust
         dataset = dataset.drop([category], axis = 1)
         return dataset
     
-def cv_for_cde(data, labels, name, std, n_splits = 5):
+def cv_for_cde(data, labels, name, std, n_splits = 5, want_r2=False, want_mae=False):
     '''
     model: must be a sklearn object with .fit and .predict methods
     data: the X matrix containing the features, can be a pd.DataFrame or a np object (array or matrix)
@@ -258,6 +258,8 @@ def cv_for_cde(data, labels, name, std, n_splits = 5):
     data = np.array(data)
     labels = np.array(labels)
     mses = []
+    r2s = []
+    maes = []
     i = 1
     for train, test in kf.split(data):
         model = MixtureDensityNetwork(name=name + str(i),
@@ -279,8 +281,19 @@ def cv_for_cde(data, labels, name, std, n_splits = 5):
         mse = sum((pred - y_test)**2)/len(test)
         print('MSE: {}'.format(mse))
         mses.append(mse)
+        r2 = r2_score(y_pred=pred, y_true=y_test)
+        r2s.append(r2)
+        maes.append(mean_absolute_error(y_pred=pred, y_true=y_test))
         i = i+1
-    return mses  
+        
+    if want_r2 and want_mae:
+        return (mses, r2s, maes)
+    elif want_r2:
+        return (mses, r2s)
+    elif want_mae:
+        return (mses, maes)
+    else:
+        return mses 
     
 # Helper function for cross-validation
 def cv(model, data, labels, n_splits = 5, want_r2=False, want_mae=False):
