@@ -243,7 +243,7 @@ def create_dataset_eeg_old(disease = None, category = None, SCORE = 'Age', clust
         dataset = dataset.drop([category], axis = 1)
         return dataset
     
-def cv_for_cde(data, labels, name, std, n_splits = 5, want_r2=False, want_mae=False):
+def cv_for_cde(data, labels, name, std, n_splits = 5, want_r2=False, want_mae=False, hidden_sizes = (16,16)):
     '''
     model: must be a sklearn object with .fit and .predict methods
     data: the X matrix containing the features, can be a pd.DataFrame or a np object (array or matrix)
@@ -266,7 +266,7 @@ def cv_for_cde(data, labels, name, std, n_splits = 5, want_r2=False, want_mae=Fa
                               ndim_x=input_dim,
                               ndim_y=1,
                               n_centers=10,
-                              hidden_sizes=(16, 16),
+                              hidden_sizes=hidden_sizes,
                               hidden_nonlinearity=tanh,
                               n_training_epochs=1000,
                               x_noise_std=std,
