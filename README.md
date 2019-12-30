@@ -3,6 +3,7 @@
 
 
 ## Files description
+- data: folder containing all available data.
 - Age discrepancy_t_tests: computes t-tests pvalues for the mean of age discrepancy in patients with 4 of the most frequent disorders versus healthy patients.
 - AgeDiscrepancy_controllingForAge: computes pvalues for the mean of age discrepancy in patients with 4 of the most frequent disorders versus healthy patients, controlling for age.
 - AgeHealthy: tests on quality of age prediction on healthy patients only (CDE versus XGBoost).
@@ -10,7 +11,8 @@
 - Age_MRI: Age prediction from MRI data (structural only and structural+DTI). Every model is fine-tuned with grid search.
 - Age_EEG_MRI: Age prediction from MRI and EEG combined. Every model is fine-tuned with grid search.
 - CDE: age prediction with Conditional Density Estimation model.
-- FindTestset: A random subset of 120 patients is selected as testset. The corresponding test indices are found in the 'data' folder, named ''
+- FindTestset: A random subset of 120 patients is selected as testset. The corresponding test indices are found in the 'data' folder, named 'test_IDS.csv'
+- utils.py: utils functions for datasets creation, cross validation and visualization.
 
 
 ## Useful links
