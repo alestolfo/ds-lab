@@ -7,6 +7,7 @@
 - Age discrepancy_t_tests: computes t-tests pvalues for the mean of age discrepancy in patients with 4 of the most frequent disorders versus healthy patients.
 - AgeDiscrepancy_controllingForAge: computes pvalues for the mean of age discrepancy in patients with 4 of the most frequent disorders versus healthy patients, controlling for age.
 - AgeHealthy: tests on quality of age prediction on healthy patients only (CDE versus XGBoost).
+- Age_globalCorticalThickness: age prediction from single feature (global cortical thickness).
 - Age_EEG: Age prediction from EEG data (average+cluster features). Every model is fine-tuned with grid search.
 - Age_MRI: Age prediction from MRI data (structural only and structural+DTI). Every model is fine-tuned with grid search.
 - Age_EEG_MRI: Age prediction from MRI and EEG combined. Every model is fine-tuned with grid search.
