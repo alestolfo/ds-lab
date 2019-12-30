@@ -13,6 +13,10 @@
 - Age_EEG_MRI: Age prediction from MRI and EEG combined. Every model is fine-tuned with grid search.
 - CDE: age prediction with Conditional Density Estimation model.
 - FindTestset: A random subset of 120 patients is selected as testset. The corresponding test indices are found in the 'data' folder, named 'test_IDS.csv'
+- SWAN_EEG-def: SWAN score prediction from EEG data
+- SWAN_MRI-def: SWAN score prediction from MRI data
+- WISC_EEG-def: WISC score prediction from EEG data
+- WISC_MRI-def: WISC score prediction from MRI data
 - utils.py: utils functions for datasets creation, cross validation and visualization.
 
 
